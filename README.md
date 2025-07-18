@@ -6,10 +6,6 @@ Built using **Next.js, React, TypeScript, AssemblyAI, Clerk, and Neon DB**, this
 
 ---
 
-## 🚀 Live Demo
-🌐 **[Doctalk AI Live](https://ai-medical-voice-agent.vercel.app)**
-
----
 
 ## 🎯 Key Features
 
