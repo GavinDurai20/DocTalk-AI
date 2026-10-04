@@ -1,4 +1,4 @@
-import { db } from "@/config/db";
+import { getDb } from "@/config/db";
 import { usersTable } from "@/config/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   console.log(user);
 
   try {
-    const users = await db
+    const users = await getDb()
       .select()
       .from(usersTable)
       //@ts-ignore
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         (user?.firstName || user?.lastName
           ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
           : primaryEmail);
-      const result = await db
+      const result = await getDb()
         .insert(usersTable)
         .values({
           //@ts-ignore

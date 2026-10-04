@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+
+    image: doctalk-ai:devops-v1
+
+    env_file:
+      - .env.local
+
+    ports:
+      - "3000:3000"
+
+    restart: unless-stopped

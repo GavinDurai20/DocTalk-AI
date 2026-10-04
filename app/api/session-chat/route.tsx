@@ -1,4 +1,4 @@
-import { db } from "@/config/db";
+import { getDb } from "@/config/db";
 import { SessionChatTable } from "@/config/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const sessionId = uuidv4();
-    const result = await db
+    const result = await getDb()
       .insert(SessionChatTable)
       .values({
         sessionId: sessionId,
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   const user = await currentUser();
 
   if (sessionId == "all") {
-    const result = await db
+    const result = await getDb()
       .select()
       .from(SessionChatTable)
 
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(result);
   } else {
-    const result = await db
+    const result = await getDb()
       .select()
       .from(SessionChatTable)
       //@ts-ignore

@@ -1,10 +1,10 @@
-import { db } from "@/config/db";
-import { openai } from "@/config/OpenAiModel";
+import { getDb } from "@/config/db";
+import { getOpenAIClient } from "@/config/OpenAiModel";
 import { SessionChatTable } from "@/config/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-const REPORT_GEN_PROMPT = `You are an AI Medical Voice Agent that just finished a voice conversation with a user. Based on doctor AI agent info and Conversation between AI medical agent and user, generate a structured report with the following fields:
+const REPORT_GEN_PROMPT = `You are an AI Medical Voice Agent that just finished a voice conversation with a user. Based on doctor AI agent info and Conversation between AI medical agent and user, generate a structured report withthe following fields:
 1. sessionId: a unique session identifier
 2. agent: the medical specialist name (e.g., "General Physician AI")
 3. user: name of the patient or "Anonymous" if not provided
@@ -34,12 +34,17 @@ Only include valid fields. Respond with nothing else.`;
 
 export async function POST(req: NextRequest) {
   const { sessionId, sessionDetail, messages } = await req.json();
+
   try {
+    const openai = getOpenAIClient();
+    const db = getDb();
+
     const UserInput =
       "AI Doctor Agent Info:" +
       JSON.stringify(sessionDetail) +
       ", Conversation:" +
       JSON.stringify(messages);
+
     const completion = await openai.chat.completions.create({
       model: "openai/gpt-4o-mini",
       messages: [
@@ -47,28 +52,31 @@ export async function POST(req: NextRequest) {
         { role: "user", content: UserInput },
       ],
     });
+
     const rawResp = completion.choices[0].message;
+
     //@ts-ignore
     const Resp = rawResp.content
       .trim()
       .replace("```json", "")
       .replace("```", "");
+
     const JSONResp = JSON.parse(Resp);
 
-    const result = await db
+    await db
       .update(SessionChatTable)
       .set({
         report: JSONResp,
         conversation: messages,
       })
       .where(eq(SessionChatTable.sessionId, sessionId));
+
     return NextResponse.json(JSONResp);
   } catch (e) {
-    //const errorMsg = e instanceof Error ? e.message : JSON.stringify(e);
-    //console.error("Medical report update error:", errorMsg, e);
-    //return NextResponse.json({ error: errorMsg });
     const errorMsg = e instanceof Error ? e.message : "Unknown error";
+
     console.error("Medical report update error:", errorMsg);
+
     return NextResponse.json(
       { error: "An error occurred while generating the report." },
       { status: 500 }
